@@ -1,6 +1,7 @@
 response.json   
-
-
+node_modules/
+react/build/
+package-lock.json
 
 *.devcontainer/*
 *.github/*
