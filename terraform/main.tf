@@ -28,3 +28,14 @@ module "cost_explorer_lambda" {
     Service     = "cost-monitoring"
   }
 }
+
+module "react_site" {
+  source = "./modules/react_site"
+
+  # Ensure the bucket name is globally unique on S3
+  bucket_name = "my-react-static-website-unique-7689"
+
+  # This path points to your built React app files.
+  # Make sure to run "npm run build" inside the react directory so that this folder exists.
+  website_source_dir = "../react/build"
+}
