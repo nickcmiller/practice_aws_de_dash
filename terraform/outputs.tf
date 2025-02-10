@@ -7,3 +7,8 @@ output "cloudfront_domain_name" {
   description = "The domain name of the CloudFront distribution"
   value       = module.react_site.cloudfront_domain_name
 }
+
+output "api_gateway_url" {
+  description = "URL of the API Gateway endpoint"
+  value       = module.api_gateway.invoke_url
+}

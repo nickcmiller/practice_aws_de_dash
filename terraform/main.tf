@@ -29,6 +29,13 @@ module "cost_explorer_lambda" {
   }
 }
 
+module "api_gateway" {
+  source = "./modules/api_gateway"
+
+  lambda_invoke_arn    = module.cost_explorer_lambda.lambda_invoke_arn
+  lambda_function_name = module.cost_explorer_lambda.lambda_function_name
+}
+
 module "react_site" {
   source = "./modules/react_site"
 

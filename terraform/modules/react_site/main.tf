@@ -40,51 +40,10 @@ resource "aws_s3_bucket_ownership_controls" "website_bucket_ownership" {
 resource "aws_s3_bucket_public_access_block" "website_bucket_public_access" {
   bucket = aws_s3_bucket.website_bucket.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-# Configure the bucket for website hosting
-resource "aws_s3_bucket_website_configuration" "website_bucket_config" {
-  bucket = aws_s3_bucket.website_bucket.id
-
-  index_document {
-    suffix = "index.html"
-  }
-
-  error_document {
-    key = "index.html"
-  }
-}
-
-# Add bucket policy to allow public read access
-resource "aws_s3_bucket_policy" "website_bucket_policy" {
-  depends_on = [aws_s3_bucket_public_access_block.website_bucket_public_access]
-  
-  bucket = aws_s3_bucket.website_bucket.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid       = "PublicReadGetObject"
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "s3:GetObject"
-        Resource  = [
-          "${aws_s3_bucket.website_bucket.arn}",
-          "${aws_s3_bucket.website_bucket.arn}/*"
-        ]
-      },
-    ]
-  })
-}
-
-# Get all files (recursively) under the website_source_dir
-locals {
-  website_files = fileset(var.website_source_dir, "**/*")
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 # Upload website files to the bucket
@@ -116,6 +75,24 @@ resource "aws_s3_object" "website_files" {
   )
 }
 
+# Configure the bucket for website hosting
+resource "aws_s3_bucket_website_configuration" "website_bucket_config" {
+  bucket = aws_s3_bucket.website_bucket.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "index.html"
+  }
+}
+
+# Create CloudFront Origin Access Identity
+resource "aws_cloudfront_origin_access_identity" "website_oai" {
+  comment = "OAI for ${var.bucket_name}"
+}
+
 # Create CloudFront distribution for HTTPS
 resource "aws_cloudfront_distribution" "website_distribution" {
   enabled             = true
@@ -123,14 +100,11 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   default_root_object = "index.html"
 
   origin {
-    domain_name = aws_s3_bucket_website_configuration.website_bucket_config.website_endpoint
+    domain_name = aws_s3_bucket.website_bucket.bucket_regional_domain_name
     origin_id   = aws_s3_bucket.website_bucket.id
 
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.website_oai.cloudfront_access_identity_path
     }
   }
 
@@ -166,3 +140,33 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     cloudfront_default_certificate = true
   }
 }
+
+resource "aws_s3_bucket_policy" "website_bucket_policy" {
+  depends_on = [aws_s3_bucket_public_access_block.website_bucket_public_access]
+  
+  bucket = aws_s3_bucket.website_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "CloudFrontReadOnly"
+        Effect    = "Allow"
+        Principal = {
+          AWS = aws_cloudfront_origin_access_identity.website_oai.iam_arn
+        }
+        Action    = "s3:GetObject"
+        Resource  = [
+          "${aws_s3_bucket.website_bucket.arn}",
+          "${aws_s3_bucket.website_bucket.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+# Get all files (recursively) under the website_source_dir
+locals {
+  website_files = fileset(var.website_source_dir, "**/*")
+}
+

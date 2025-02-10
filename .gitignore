@@ -1,3 +1,5 @@
+*.env*
+
 response.json   
 
 # React
