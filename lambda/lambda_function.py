@@ -37,6 +37,12 @@ def lambda_handler(event, context):
         print(f"Error: {str(e)}")
     
     return {
-        "statusCode": 200,
-        "body": message
+        'statusCode': 200,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+            'Access-Control-Allow-Methods': 'GET,OPTIONS',
+            'Content-Type': 'application/json'
+        },
+        'body': json.dumps({'message': message})  # Wrap message in an object and convert to JSON string
     }
