@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import styles from './App.module.css';
 
 function App() {
   const [apiData, setApiData] = useState(null);
@@ -24,7 +25,6 @@ function App() {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
-          mode: 'cors' // Explicitly set CORS mode
         });
         
         // Debug logs
@@ -50,16 +50,21 @@ function App() {
   }, [baseApiUrl]);
 
   return (
-    <div className="App">
-      <h1>Welcome to the React Static Website</h1>
-      <p>This website is hosted on S3 using Terraform. I'm not a cat.</p>
-      <div>
-        <h2>Cost Explorer Data</h2>
-        <div style={{backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '5px'}}>
-          <p><strong>Debug Info:</strong></p>
-          <p>API URL: {baseApiUrl || 'Not set'}</p>
+    <div className={styles.app}>
+      <div className={styles.container}>
+        <h1 className={styles.header}>Cost Explorer Data</h1>
+        
+        <div 
+          className={`${styles.statusBox} ${
+            error ? styles.errorStatus : 
+            apiData ? styles.successStatus : 
+            styles.loadingStatus
+          }`}
+        >
           {error ? (
-            <div style={{ color: 'red' }}>Error: {error}</div>
+            <div>
+              <strong>Error:</strong> {error}
+            </div>
           ) : apiData ? (
             <div>{apiData.message}</div>
           ) : (
