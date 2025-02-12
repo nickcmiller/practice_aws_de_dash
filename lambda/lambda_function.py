@@ -7,9 +7,6 @@ def lambda_handler(event, context):
     today = datetime.date.today()
     first_of_this_month = today.replace(day=1)
     
-    # Debug print the date range
-    print(f"Checking costs from {first_of_this_month} to {today}")
-    
     time_period = {
         'Start': first_of_this_month.strftime('%Y-%m-%d'),
         'End': today.strftime('%Y-%m-%d')
