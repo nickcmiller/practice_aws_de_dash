@@ -172,10 +172,6 @@ cp .env.example .env
 4. Push to the branch
 5. Create a Pull Request
 
-## License
-
-[Specify your license here]
-
 ## Acknowledgments
 
 - AWS Documentation
